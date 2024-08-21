@@ -31,6 +31,11 @@ create_hardlinks_with_postfix() {
 
     # Iterate over all files in the source directory
     for file in "$src_dir"/*; do
+        # Skip directories
+        if [ -d "$file" ]; then
+            continue
+        fi
+
         # Extract the file name without the path
         filename=$(basename "$file")
 
@@ -59,14 +64,12 @@ create_hardlinks_with_postfix() {
     done
 }
 
-# Create hard links for video files without changes
+# Create hard links for the files in the content directory itself (zero level)
 create_hardlinks_with_postfix "$content_dir"
 
-# Create hard links for directories with audio and subtitles
-for dir in "$content_dir"/*/; do
-    if [[ "$dir" != "$temp_dir/" ]]; then
-        create_hardlinks_with_postfix "$dir"
-    fi
+# Create hard links for files in subdirectories recursively (first level and deeper)
+find "$content_dir" -mindepth 1 -type d | while read -r dir; do
+    create_hardlinks_with_postfix "$dir"
 done
 
 echo "Hard links creation completed."
